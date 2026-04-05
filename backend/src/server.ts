@@ -23,6 +23,18 @@ app.get('/guests', async (req, res) => {
   }
 });
 
+app.post('/guests', async (req, res) => {
+  const { nome, cpf, mesa } = req.body;
+  try {
+    const newGuest = await prisma.convidado.create({
+      data: { nome, cpf, mesa: Number(mesa) }
+    });
+    res.status(201).json(newGuest);
+  } catch (error) {
+    res.status(400).json({ error: "Erro ao cadastrar convidado. CPF já existe?" });
+  }
+});
+
 app.listen(3001, () => {
   console.log("✅ Servidor rodando em: http://localhost:3001");
 });

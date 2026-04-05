@@ -17,7 +17,8 @@ model Usuario {
 model Convidado {
   id             Int     @id @default(autoincrement())
   nome           String
-  cpf            String  @unique
+  email          String  @unique
+  telefone       String
   mesa           Int
   status_checkin Boolean @default(false)
 }
