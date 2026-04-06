@@ -24,14 +24,29 @@ app.get('/guests', async (req, res) => {
 });
 
 app.post('/guests', async (req, res) => {
-  const { nome, cpf, mesa } = req.body;
+  const { nome, mesa, status_checkin, email, telefone } = req.body;
   try {
     const newGuest = await prisma.convidado.create({
-      data: { nome, cpf, mesa: Number(mesa) }
+      data: { nome, mesa: Number(mesa), status_checkin: false, email, telefone}
     });
     res.status(201).json(newGuest);
   } catch (error) {
-    res.status(400).json({ error: "Erro ao cadastrar convidado. CPF já existe?" });
+    res.status(400).json({ error: "Erro ao cadastrar convidado." });
+  }
+});
+
+// Rota para fazer Check-in (Atualizar Status)
+app.patch('/guests/:id/checkin', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updatedGuest = await prisma.convidado.update({
+      where: { id: Number(id) },
+      data: { status_checkin: true }
+    });
+    res.json(updatedGuest);
+  } catch (error) {
+    res.status(400).json({ error: "Erro ao realizar check-in." });
   }
 });
 
