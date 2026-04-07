@@ -50,6 +50,18 @@ app.patch('/guests/:id/checkin', async (req, res) => {
   }
 });
 
+app.delete('/guests/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.convidado.delete({
+      where: { id: Number(id) }
+    });
+    res.status(204).send(); // 204 significa "Sucesso, mas não tenho nada para te devolver"
+  } catch (error) {
+    res.status(400).json({ error: "Erro ao excluir convidado." });
+  }
+});
+
 app.listen(3001, () => {
   console.log("✅ Servidor rodando em: http://localhost:3001");
 });
