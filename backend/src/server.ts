@@ -1,9 +1,13 @@
 import express from 'express';
 import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const prisma = new PrismaClient(); // Na v5 isso funciona liso!
+
+const SECRET_KEY = "sua_chave_secreta_aqui"; // Em produção, isso fica no arquivo .env
 
 app.use(cors());
 app.use(express.json());
@@ -11,6 +15,35 @@ app.use(express.json());
 // Rota de teste
 app.get('/health', (req, res) => {
   res.json({ message: "Wedding Pass Online e Estável! 🚀" });
+});
+
+app.post('/login', async (req, res) => {
+  const { email, senha } = req.body;
+
+  // 1. Procura o usuário no banco
+  const usuario = await prisma.usuario.findUnique({
+    where: { email }
+  });
+
+  if (!usuario) {
+    return res.status(401).json({ error: "E-mail ou senha incorretos" });
+  }
+
+  // 2. Compara a senha digitada com a criptografada no banco
+  const senhaValida = await bcrypt.compare(senha, usuario.senha);
+
+  if (!senhaValida) {
+    return res.status(401).json({ error: "E-mail ou senha incorretos" });
+  }
+
+  // 3. Gera o Token (O "Crachá Digital")
+  const token = jwt.sign(
+    { id: usuario.id, cargo: usuario.cargo }, 
+    SECRET_KEY, 
+    { expiresIn: '1d' } // O login vale por 1 dia
+  );
+
+  res.json({ token, cargo: usuario.cargo });
 });
 
 // Sua rota de convidados

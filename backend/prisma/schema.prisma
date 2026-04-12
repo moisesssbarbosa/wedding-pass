@@ -9,9 +9,10 @@ datasource db {
 
 model Usuario {
   id    Int    @id @default(autoincrement())
-  nome  String
+  nome  String 
   email String @unique
   senha String
+  cargo String 
 }
 
 model Convidado {
