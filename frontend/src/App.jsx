@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import axios from 'axios'
+import Login from './Login';
 
 function App() {
   const [convidados, setConvidados] = useState([])
@@ -9,6 +10,8 @@ function App() {
   const [telefone, setTelefone] = useState('')
   const [mesa, setMesa] = useState('')
   const [busca, setBusca] = useState('');
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [cargo, setCargo] = useState(localStorage.getItem('cargo'));
 
   // Função para buscar convidados (vamos usar ela várias vezes)
   const buscarConvidados = () => {
@@ -58,6 +61,10 @@ function App() {
     }
   };
 
+  if (!token) {
+    return <Login onLogin={(t, c) => { setToken(t); setCargo(c); }} />;
+  }
+
   // Lógica para calcular os números do Dashboard
   const total = convidados.length;
   const confirmados = convidados.filter(c => c.status_checkin).length;
@@ -82,6 +89,12 @@ function App() {
           <strong>Pendentes:</strong> {pendentes}
         </div>
       </div>
+
+      <div style={{ padding: '20px' }}>
+      <header style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <h1>Painel de {cargo === 'ADMIN' ? 'Administração' : 'Recepção'}</h1>
+        <button onClick={() => { localStorage.clear(); setToken(null); }}>Sair</button>
+      </header>
 
       {/* FORMULÁRIO DE CADASTRO */}
       <section style={{ marginBottom: '40px', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
@@ -140,6 +153,7 @@ function App() {
         </tbody>
       </table>
     </div>
+  </div>
   )
 }
 

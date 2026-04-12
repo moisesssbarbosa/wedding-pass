@@ -7,7 +7,8 @@ import jwt from 'jsonwebtoken';
 const app = express();
 const prisma = new PrismaClient(); // Na v5 isso funciona liso!
 
-const SECRET_KEY = "sua_chave_secreta_aqui"; // Em produção, isso fica no arquivo .env
+// Puxando a chave do ambiente
+const SECRET_KEY = process.env.SECRET_KEY || "chave_reserva_caso_o_env_falhe";
 
 app.use(cors());
 app.use(express.json());
@@ -15,6 +16,24 @@ app.use(express.json());
 // Rota de teste
 app.get('/health', (req, res) => {
   res.json({ message: "Wedding Pass Online e Estável! 🚀" });
+});
+
+app.post('/usuarios', async (req, res) => {
+  const { email, senha, cargo, nome } = req.body;
+  
+  // O 10 é o "Salt" (nível de complexidade do embaralhamento)
+  const senhaCriptografada = await bcrypt.hash(senha, 10);
+
+  const novoUsuario = await prisma.usuario.create({
+    data: {
+      email,
+      nome,
+      cargo,
+      senha: senhaCriptografada
+    }
+  });
+
+  res.json(novoUsuario);
 });
 
 app.post('/login', async (req, res) => {
