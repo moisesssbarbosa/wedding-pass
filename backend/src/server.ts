@@ -3,6 +3,30 @@ import cors from 'cors';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from 'express';
+
+interface RequestComUsuario extends Request {
+  user?: any;
+}
+
+export const autenticar = (req: RequestComUsuario, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Token não fornecido" });
+  }
+
+  const [, token] = authHeader.split(' ');
+
+  try {
+    const decoded = jwt.verify(token, SECRET_KEY);
+    // Agora o TS aceita porque usamos a nossa interface personalizada
+    req.user = decoded; 
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Token inválido ou expirado" });
+  }
+};
 
 const app = express();
 const prisma = new PrismaClient(); // Na v5 isso funciona liso!
@@ -66,7 +90,7 @@ app.post('/login', async (req, res) => {
 });
 
 // Sua rota de convidados
-app.get('/guests', async (req, res) => {
+app.get('/guests', autenticar, async (req, res) => {
   try {
     const guests = await prisma.convidado.findMany();
     res.json(guests);
@@ -75,7 +99,7 @@ app.get('/guests', async (req, res) => {
   }
 });
 
-app.post('/guests', async (req, res) => {
+app.post('/guests', autenticar, async (req, res) => {
   const { nome, mesa, status_checkin, email, telefone } = req.body;
   try {
     const newGuest = await prisma.convidado.create({
