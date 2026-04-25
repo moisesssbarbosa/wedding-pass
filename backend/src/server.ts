@@ -28,6 +28,16 @@ export const autenticar = (req: RequestComUsuario, res: Response, next: NextFunc
   }
 };
 
+// Esse middleware só deixa passar quem for ADMIN
+const verificarAdmin = (req: any, res: Response, next: NextFunction) => {
+  // Usamos 'any' no req aqui para o TS não reclamar que o 'user' não existe no padrão
+  if (req.user && req.user.cargo === 'ADMIN') {
+    return next();
+  }
+  
+  return res.status(403).json({ error: "Acesso negado. Apenas administradores!" });
+};
+
 const app = express();
 const prisma = new PrismaClient(); // Na v5 isso funciona liso!
 
@@ -86,7 +96,7 @@ app.post('/login', async (req, res) => {
     { expiresIn: '1d' } // O login vale por 1 dia
   );
 
-  res.json({ token, cargo: usuario.cargo });
+  res.json({ token, cargo: usuario.cargo, nome: usuario.nome });
 });
 
 // Sua rota de convidados
@@ -99,8 +109,14 @@ app.get('/guests', autenticar, async (req, res) => {
   }
 });
 
-app.post('/guests', autenticar, async (req, res) => {
+app.post('/guests', autenticar, verificarAdmin, async (req, res) => {
   const { nome, mesa, status_checkin, email, telefone } = req.body;
+
+  // Validação simples
+  if (!nome || !email) {
+    return res.status(400).json({ error: "Nome e E-mail são obrigatórios!" });
+  }
+
   try {
     const newGuest = await prisma.convidado.create({
       data: { nome, mesa: Number(mesa), status_checkin: false, email, telefone}
@@ -112,21 +128,22 @@ app.post('/guests', autenticar, async (req, res) => {
 });
 
 // Rota para fazer Check-in (Atualizar Status)
-app.patch('/guests/:id/checkin', async (req, res) => {
+app.patch('/guests/:id/checkin', autenticar, verificarAdmin, async (req, res) => {
   const { id } = req.params;
+  const { status } = req.body; // O front vai enviar true ou false aqui
 
   try {
     const updatedGuest = await prisma.convidado.update({
       where: { id: Number(id) },
-      data: { status_checkin: true }
+      data: { status_checkin: status } 
     });
     res.json(updatedGuest);
   } catch (error) {
-    res.status(400).json({ error: "Erro ao realizar check-in." });
+    res.status(400).json({ error: "Erro ao atualizar status." });
   }
 });
 
-app.delete('/guests/:id', async (req, res) => {
+app.delete('/guests/:id', autenticar, verificarAdmin, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.convidado.delete({
@@ -136,6 +153,21 @@ app.delete('/guests/:id', async (req, res) => {
   } catch (error) {
     res.status(400).json({ error: "Erro ao excluir convidado." });
   }
+});
+
+
+
+app.get('/stats', autenticar, async (req, res) => {
+  const total = await prisma.convidado.count();
+  const confirmados = await prisma.convidado.count({
+    where: { status_checkin: true }
+  });
+
+  res.json({
+    total,
+    confirmados,
+    faltantes: total - confirmados
+  });
 });
 
 app.listen(3001, () => {

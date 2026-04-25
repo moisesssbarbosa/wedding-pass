@@ -4,18 +4,31 @@ import api from './api'; // Importando sua configuração do axios
 export default function Admin() {
   const [convidados, setConvidados] = useState([]);
 
-  useEffect(() => {
-    // Função para buscar os dados no seu servidor
-    const carregarDados = async () => {
-      try {
-        const response = await api.get('/guests'); // Lembra? O token já vai no header automaticamente pelo interceptor!
-        setConvidados(response.data);
-      } catch (err) {
-        console.error("Erro ao carregar convidados", err);
-      }
-    };
+  // Função para buscar os dados no seu servidor
+  const carregarDados = async () => {
+    try {
+      const response = await api.get('/guests'); // Lembra? O token já vai no header automaticamente pelo interceptor!
+      setConvidados(response.data);
+    } catch (err) {
+      console.error("Erro ao carregar convidados", err);
+    }
+  };
 
+  const [stats, setStats] = useState({ total: 0, confirmados: 0, faltantes: 0 });
+
+  const carregarStats = async () => {
+    try {
+      const response = await api.get('/stats');
+      setStats(response.data);
+    } catch (err) {
+      console.error("Erro ao carregar estatísticas", err);
+    }
+  };
+
+  useEffect(() => {
     carregarDados();
+    carregarStats();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleLogout = () => {
@@ -28,24 +41,27 @@ export default function Admin() {
     window.location.href = '/'; 
   };
 
+  const handleToggleCheckin = async (id, statusAtual) => {
+    try {
+      // Enviamos o contrário do status atual (se era false, vira true)
+      await api.patch(`/guests/${id}/checkin`, { status: !statusAtual });
+      
+      // Atualiza a lista na tela para o usuário ver a bolinha mexer
+      carregarDados(); 
+    } catch (err) {
+      alert("Erro ao atualizar!");
+    }
+  };
+
   return (
     <div style={{ padding: '20px' }}>
-      <h1>Painel do Administrador 🔐</h1>
+      <h1>Painel do Administrador 🔐</h1>  
 
-    <button 
-        onClick={handleLogout}
-        style={{ 
-            backgroundColor: '#ff4d4d', 
-            color: 'white', 
-            border: 'none', 
-            padding: '10px', 
-            cursor: 'pointer',
-            borderRadius: '5px',
-            float: 'right' 
-        }}
-        >
-        Sair do Sistema
-    </button>   
+    <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
+      <div className="stat-card">Total: {stats.total}</div>
+      <div className="stat-card" style={{ color: 'green' }}>Confirmados: {stats.confirmados}</div>
+      <div className="stat-card" style={{ color: 'orange' }}>Faltantes: {stats.faltantes}</div>
+    </div>  
       
       <table border="1" style={{ width: '100%', marginTop: '100px', textAlign: 'left' }}>
         <thead>
@@ -65,7 +81,14 @@ export default function Admin() {
               <td>{c.telefone}</td>
               <td>{c.mesa}</td>
               <td>
-                <button style={{ color: 'red' }}>Excluir</button>
+                <label className="switch">
+                  <input 
+                    type="checkbox" 
+                    checked={c.status_checkin} 
+                    onChange={() => handleToggleCheckin(c.id, c.status_checkin)}
+                  />
+                  <span className="slider round"></span>
+                </label>
               </td>
             </tr>
           ))}
