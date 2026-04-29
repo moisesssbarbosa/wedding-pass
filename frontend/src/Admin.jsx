@@ -48,14 +48,39 @@ export default function Admin() {
       
       // Atualiza a lista na tela para o usuário ver a bolinha mexer
       carregarDados(); 
+
+      carregarStats();
     } catch (err) {
       alert("Erro ao atualizar!");
     }
   };
 
+  const [novoConvidado, setNovoConvidado] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    mesa: ''
+  });
+
   return (
     <div style={{ padding: '20px' }}>
       <h1>Painel do Administrador 🔐</h1>  
+
+      <button 
+        onClick={() => setIsModalOpen(true)} 
+        style={{
+          padding: '10px 20px',
+          marginBottom: '20px',
+          background: '#4f46e5',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        + Novo Convidado
+      </button>
 
     <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
       <div className="stat-card">Total: {stats.total}</div>
@@ -94,6 +119,9 @@ export default function Admin() {
           ))}
         </tbody>
       </table>
+    
+          
+      
     </div>
   );
 }
