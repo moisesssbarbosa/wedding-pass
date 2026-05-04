@@ -3,6 +3,7 @@ import Login from './Login';
 import Admin from './Admin';
 import Checkin from './Checkin';
 import Layout from './Layout';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
   const token = localStorage.getItem('token');

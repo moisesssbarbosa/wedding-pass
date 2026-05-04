@@ -1,8 +1,18 @@
-import { useEffect, useState } from 'react';
+"use client";
+
+import React, { useEffect, useState } from 'react';
 import api from './api'; // Importando sua configuração do axios
+import { Modal, Button, Form, FormLabel } from 'react-bootstrap';
 
 export default function Admin() {
   const [convidados, setConvidados] = useState([]);
+
+  const [novoConvidado, setNovoConvidado] = useState({
+    nome: '',
+    email: '',
+    telefone: '',
+    mesa: ''
+  });
 
   // Função para buscar os dados no seu servidor
   const carregarDados = async () => {
@@ -55,38 +65,108 @@ export default function Admin() {
     }
   };
 
-  const [novoConvidado, setNovoConvidado] = useState({
-    nome: '',
-    email: '',
-    telefone: '',
-    mesa: ''
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Funções para abrir e fechar
+  const handleOpen = () => setIsModalOpen(true);
+  const handleClose = () => setIsModalOpen(false);
+
+  const handleSave = async () => {
+    try {
+      // 1. Log para ver se os dados estão chegando no clique
+      console.log("Enviando dados:", novoConvidado);
+  
+      // 2. Enviar para o Backend
+      // Lembre-se de importar o axios no topo: import axios from 'axios';
+      await api.post('http://localhost:3001/guests', novoConvidado);
+  
+      // 3. Sucesso!
+      alert("Convidado salvo com sucesso!");
+      setIsModalOpen(false); // Fecha o modal
+      
+      // (Opcional) Recarregar a lista de convidados aqui
+      carregarDados(); 
+
+      carregarStats();
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      alert("Erro ao salvar, verifique o console!");
+    }
+  };
 
   return (
     <div style={{ padding: '20px' }}>
       <h1>Painel do Administrador 🔐</h1>  
 
-      <button 
-        onClick={() => setIsModalOpen(true)} 
-        style={{
-          padding: '10px 20px',
-          marginBottom: '20px',
-          background: '#4f46e5',
-          color: 'white',
-          border: 'none',
-          borderRadius: '8px',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
+      {/* Botão que abre o modal */}
+      <Button variant="primary" onClick={handleOpen}>
         + Novo Convidado
-      </button>
+      </Button>
 
-    <div style={{ display: 'flex', gap: '20px', marginBottom: '20px' }}>
-      <div className="stat-card">Total: {stats.total}</div>
-      <div className="stat-card" style={{ color: 'green' }}>Confirmados: {stats.confirmados}</div>
-      <div className="stat-card" style={{ color: 'orange' }}>Faltantes: {stats.faltantes}</div>
-    </div>  
+      <Modal show={isModalOpen} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>Cadastrar Convidado</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className='mb-3' controlId='formNome'>
+              <FormLabel>Nome do Convidado</FormLabel>
+              <Form.Control
+                type="text"
+                placeholder="digite o nome completo"
+                onChange={(e) => setNovoConvidado({...novoConvidado, nome: e.target.value})}
+              />
+            </Form.Group>
+            <Form.Group className="mb-3" controlId="formEmail">
+              <Form.Label>E-mail</Form.Label>
+              <Form.Control 
+                type="email" 
+                placeholder="exemplo@email.com" 
+                value={novoConvidado.email}
+                onChange={(e) => setNovoConvidado({...novoConvidado, email: e.target.value})}
+              />
+            </Form.Group>
+            <div className="row">
+            <div className="col-md-6">
+              <Form.Group className="mb-3" controlId="formTelefone">
+                <Form.Label>Telefone</Form.Label>
+                <Form.Control 
+                  type="text" 
+                  placeholder="(51) 99999-9999" 
+                  value={novoConvidado.telefone}
+                  onChange={(e) => setNovoConvidado({...novoConvidado, telefone: e.target.value})}
+                />
+              </Form.Group>
+            </div>
+            <div className="col-md-6">
+              <Form.Group className="mb-3" controlId="formMesa">
+                <Form.Label>Mesa</Form.Label>
+                <Form.Control 
+                  type="number" 
+                  placeholder="00" 
+                  value={novoConvidado.mesa}
+                  onChange={(e) => setNovoConvidado({...novoConvidado, mesa: e.target.value})}
+                />
+              </Form.Group>
+            </div>
+          </div>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Fechar
+          </Button>
+          <Button variant="primary" onClick={handleSave}>
+            Salvar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', marginTop: '20px' }}>
+        <div className="stat-card">Total: {stats.total}</div>
+        <div className="stat-card" style={{ color: 'green' }}>Confirmados: {stats.confirmados}</div>
+        <div className="stat-card" style={{ color: 'orange' }}>Faltantes: {stats.faltantes}</div>
+      </div>  
       
       <table border="1" style={{ width: '100%', marginTop: '100px', textAlign: 'left' }}>
         <thead>
