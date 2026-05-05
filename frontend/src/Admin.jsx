@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import api from './api'; // Importando sua configuração do axios
 import { Modal, Button, Form, FormLabel } from 'react-bootstrap';
+import { PatternFormat } from 'react-number-format'; 
 
 export default function Admin() {
   const [convidados, setConvidados] = useState([]);
@@ -70,24 +71,36 @@ export default function Admin() {
   // Funções para abrir e fechar
   const handleOpen = () => setIsModalOpen(true);
   const handleClose = () => setIsModalOpen(false);
+  const [editingId, setEditingId] = useState(null);
+
+  const handleEditingClick = (convidado) => {
+    setEditingId(convidado.id);
+    setNovoConvidado({
+      nome: convidado.nome,
+      email: convidado.email,
+      telefone: convidado.telefone,
+      mesa: convidado.mesa      
+    });
+    setIsModalOpen(true);
+  };
 
   const handleSave = async () => {
     try {
-      // 1. Log para ver se os dados estão chegando no clique
-      console.log("Enviando dados:", novoConvidado);
-  
-      // 2. Enviar para o Backend
-      // Lembre-se de importar o axios no topo: import axios from 'axios';
-      await api.post('http://localhost:3001/guests', novoConvidado);
-  
-      // 3. Sucesso!
-      alert("Convidado salvo com sucesso!");
-      setIsModalOpen(false); // Fecha o modal
+      if (editingId) {
+        await api.put('/convidados/${editingId', novoConvidado);
+        alert("Convidado Atualizado!");
+      } else {
+        await api.post('/convidados', novoConvidado);
+        alert("Convidado criado!");
+      }
       
+      setIsModalOpen(false);
+      setEditingId(null);
+
       // (Opcional) Recarregar a lista de convidados aqui
       carregarDados(); 
-
       carregarStats();
+
     } catch (error) {
       console.error("Erro ao salvar:", error);
       alert("Erro ao salvar, verifique o console!");
@@ -130,11 +143,14 @@ export default function Admin() {
             <div className="col-md-6">
               <Form.Group className="mb-3" controlId="formTelefone">
                 <Form.Label>Telefone</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  placeholder="(51) 99999-9999" 
+                <PatternFormat
+                  format='(##) # ####-####'
+                  placeholder='(__) _ ____-____'
+                  mask="_"
+                  customInput={Form.Control}
                   value={novoConvidado.telefone}
-                  onChange={(e) => setNovoConvidado({...novoConvidado, telefone: e.target.value})}
+                  onValueChange={(values) => { setNovoConvidado({...novoConvidado, telefone: values.value});
+                  }}
                 />
               </Form.Group>
             </div>
@@ -171,6 +187,7 @@ export default function Admin() {
       <table border="1" style={{ width: '100%', marginTop: '100px', textAlign: 'left' }}>
         <thead>
           <tr style={{ backgroundColor: '#f2f2f2' }}>
+            <th></th>
             <th>Nome</th>
             <th>E-mail</th>
             <th>Telefone</th>
@@ -181,6 +198,11 @@ export default function Admin() {
         <tbody>
           {convidados.map((c) => (
             <tr key={c.id}>
+              <td>
+                <button variant="warning" size="sm" onClick={() => handleEditingClick(convidados)}>
+                  ✏
+                </button>
+              </td>
               <td>{c.nome}</td>
               <td>{c.email}</td>
               <td>{c.telefone}</td>

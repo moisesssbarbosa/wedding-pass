@@ -143,6 +143,26 @@ app.patch('/guests/:id/checkin', autenticar, verificarAdmin, async (req, res) =>
   }
 });
 
+app.put('/convidados/:id', autenticar, verificarAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { nome, email, telefone, mesa } = req.body;
+
+  try {
+    const convidadoAtualizado = await prisma.convidado.update({
+      where: { id: Number(id) },
+      data: {
+        nome,
+        email,
+        telefone,
+        mesa: Number(mesa)
+      },
+    });
+    return res.json(convidadoAtualizado);
+  } catch (error) {
+    return res.status(400).json({ error: "Erro ao atualizar no banco"})
+  }
+});
+
 app.delete('/guests/:id', autenticar, verificarAdmin, async (req, res) => {
   const { id } = req.params;
   try {
