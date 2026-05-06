@@ -86,9 +86,10 @@ export default function Admin() {
 
   const handleSave = async () => {
     console.log("--- DEBUG START ---");
-  console.log("Valor do editingId:", editingId); // O que aparece aqui?
-  console.log("Dados do novoConvidado:", novoConvidado);
-  console.log("-------------------");
+    console.log("Valor do editingId:", editingId); // O que aparece aqui?
+    console.log("Dados do novoConvidado:", novoConvidado);
+    console.log("-------------------");
+
     try {
       if (editingId) {
         console.log("Indo para o PUT (editar)");
@@ -112,6 +113,23 @@ export default function Admin() {
       alert("Erro ao salvar, verifique o console!");
     }
   };
+
+  const handleDelete = async (id) => {
+    const confirmacao = window.confirm("Tem certeza que dejsa apagar este convidado?");
+
+    if (confirmacao) {
+      try {
+        await api.delete(`/guests/${id}`);
+        alert("Convidado removido com sucesso!");
+      } catch (error) {
+        alert("Erro ao tentar excluir: " + error.message);
+      }
+
+      carregarDados();
+      carregarStats();
+    }
+  };
+
 
   return (
     <div style={{ padding: '20px' }}>
@@ -203,6 +221,7 @@ export default function Admin() {
             <th>Telefone</th>
             <th>Mesa</th>
             <th>Ações</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -226,6 +245,9 @@ export default function Admin() {
                   />
                   <span className="slider round"></span>
                 </label>
+              </td>
+              <td>
+                <Button variant='danger' size='sm' onClick={() => handleDelete(c.id)}>🗑</Button>
               </td>
             </tr>
           ))}

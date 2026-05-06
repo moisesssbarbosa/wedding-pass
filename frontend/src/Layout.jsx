@@ -32,14 +32,7 @@ export default function Layout({ children }) {
         </div>
         
         <hr />
-        <nav>
-          <ul>
-            {cargo === 'ADMIN' && (
-              <li><button onClick={() => navigate('/admin')}>Dashboard Admin</button></li>
-            )}
-            <li><button onClick={() => navigate('/recepcao')}>Lista de Check-in</button></li>
-          </ul>
-        </nav>
+      
         <button className="btn-sair" onClick={handleLogout}>Sair</button>
       </aside>
 

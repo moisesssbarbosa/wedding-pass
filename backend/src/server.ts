@@ -128,7 +128,7 @@ app.post('/convidados', autenticar, verificarAdmin, async (req, res) => {
 });
 
 // Rota para fazer Check-in (Atualizar Status)
-app.patch('/guests/:id/checkin', autenticar, verificarAdmin, async (req, res) => {
+app.patch('/guests/:id/checkin', autenticar, async (req, res) => {
   const { id } = req.params;
   const { status } = req.body; // O front vai enviar true ou false aqui
 

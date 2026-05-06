@@ -1,7 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import Admin from './Admin';
-import Checkin from './Checkin';
+import Recepcionista from './Recepcionista';
 import Layout from './Layout';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
