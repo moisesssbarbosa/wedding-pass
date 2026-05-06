@@ -85,11 +85,17 @@ export default function Admin() {
   };
 
   const handleSave = async () => {
+    console.log("--- DEBUG START ---");
+  console.log("Valor do editingId:", editingId); // O que aparece aqui?
+  console.log("Dados do novoConvidado:", novoConvidado);
+  console.log("-------------------");
     try {
       if (editingId) {
-        await api.put('/convidados/${editingId', novoConvidado);
+        console.log("Indo para o PUT (editar)");
+        await api.put(`/convidados/${editingId}`, novoConvidado);
         alert("Convidado Atualizado!");
       } else {
+        console.log("Indo para o POST (criar)");
         await api.post('/convidados', novoConvidado);
         alert("Convidado criado!");
       }
@@ -112,7 +118,11 @@ export default function Admin() {
       <h1>Painel do Administrador 🔐</h1>  
 
       {/* Botão que abre o modal */}
-      <Button variant="primary" onClick={handleOpen}>
+      <Button variant="primary" onClick={() => {
+        setEditingId(null);
+        setNovoConvidado({ nome: '', email: '', telefone: '', mesa: '' });
+        setIsModalOpen(true);
+      }}>
         + Novo Convidado
       </Button>
 
@@ -133,7 +143,7 @@ export default function Admin() {
             <Form.Group className="mb-3" controlId="formEmail">
               <Form.Label>E-mail</Form.Label>
               <Form.Control 
-                type="email" 
+                type='email' 
                 placeholder="exemplo@email.com" 
                 value={novoConvidado.email}
                 onChange={(e) => setNovoConvidado({...novoConvidado, email: e.target.value})}
@@ -199,7 +209,7 @@ export default function Admin() {
           {convidados.map((c) => (
             <tr key={c.id}>
               <td>
-                <button variant="warning" size="sm" onClick={() => handleEditingClick(convidados)}>
+                <button variant="warning" size="sm" onClick={() => handleEditingClick(c)}>
                   ✏
                 </button>
               </td>

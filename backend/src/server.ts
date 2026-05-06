@@ -109,7 +109,7 @@ app.get('/guests', autenticar, async (req, res) => {
   }
 });
 
-app.post('/guests', autenticar, verificarAdmin, async (req, res) => {
+app.post('/convidados', autenticar, verificarAdmin, async (req, res) => {
   const { nome, mesa, status_checkin, email, telefone } = req.body;
 
   // Validação simples
@@ -148,6 +148,20 @@ app.put('/convidados/:id', autenticar, verificarAdmin, async (req, res) => {
   const { nome, email, telefone, mesa } = req.body;
 
   try {
+
+    const conflito = await prisma.convidado.findFirst({
+      where: {
+        AND: [
+          { id: { not: Number(id) } },
+          { OR: [{ email: email }, { telefone: telefone }] }
+        ]
+      }
+    });
+
+    if (conflito) {
+      return res.status(400).json({ error: "já existe outro convidado com este email ou telefone."})
+    }
+
     const convidadoAtualizado = await prisma.convidado.update({
       where: { id: Number(id) },
       data: {
@@ -157,7 +171,9 @@ app.put('/convidados/:id', autenticar, verificarAdmin, async (req, res) => {
         mesa: Number(mesa)
       },
     });
+
     return res.json(convidadoAtualizado);
+    
   } catch (error) {
     return res.status(400).json({ error: "Erro ao atualizar no banco"})
   }
